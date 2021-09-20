@@ -8,7 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.officeproject.api.request.LoginRequest
 import com.example.officeproject.api.request.PatchUserRequest
 import com.example.officeproject.databinding.ActivityMainBinding
-import com.example.officeproject.helpers.showToast
+import com.example.officeproject.helpers.*
 import com.example.officeproject.viewmodels.LoginViewModel
 import com.example.officeproject.viewmodels.ViewModelFactory
 
@@ -20,24 +20,31 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        // Aoto login code
+        var token = getPreferances(Constant.LOGIN_TOKEN)
+        if (!token.isNullOrEmpty())//check token is in pref
+        {
+            Constant.token = token;
+            //open main activity
+        }
+
         viewModel = ViewModelProvider(
             this,
             ViewModelFactory()
         ).get(LoginViewModel::class.java)
 
         binding.btnLogin.setOnClickListener {
-        //    checkLogin()
-        updateDriverDetails()
+            checkLogin()
+            //  updateDriverDetails()
         }
-
-
-
     }
 
-    fun updateDriverDetails(){
-        var request=PatchUserRequest(job = "testeer",name = "ravi")
+
+    fun updateDriverDetails() {
+        var request = PatchUserRequest(job = "testeer", name = "ravi")
         lifecycleScope.launchWhenStarted {
-         var data=  viewModel.patchDriver(request)
+            var data = viewModel.patchDriver(request)
 
         }
     }
@@ -47,20 +54,29 @@ class MainActivity : AppCompatActivity() {
         var pwd = binding.edtPwd.text.toString().trim();
         var loginRequest = LoginRequest(pwd, username)
         lifecycleScope.launchWhenStarted {
-            binding.prgCircular.visibility=View.VISIBLE
-           var loginResponse= viewModel.checkLogin(loginRequest)
-            if(loginResponse.token.isNullOrEmpty()){
+            binding.prgCircular.visibility = View.VISIBLE
+            var loginResponse = viewModel.checkLogin(loginRequest)
+            if (loginResponse.token.isNullOrEmpty()) {
                 showToast("Username or password is Invalid")
-            }else{
+            } else {
                 showToast("Sucess...")
+                savePreferances(Constant.LOGIN_TOKEN, loginResponse.token) //store token to pref
+                Constant.token = loginResponse.token;
+                binding.edtUsername.setText(loginResponse.token)
             }
-            binding.prgCircular.visibility=View.GONE
+            binding.prgCircular.visibility = View.GONE
         }
     }
 
-    fun getDriverList(){
+    fun logout() {
+        clearPref()
+        finish()
+        // to clear all activity and close app finishAffinity()
+    }
+
+    fun getDriverList() {
         lifecycleScope.launchWhenStarted {
-           var data= viewModel.getDriverList()
+            var data = viewModel.getDriverList()
 
         }
     }
